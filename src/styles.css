@@ -43,6 +43,21 @@ button {
   font-family: inherit;
 }
 
+button:not(.keythm-key),
+.github-button {
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+button:not(.keythm-key):hover,
+.github-button:hover {
+  transform: translateY(-2px);
+}
+
+button:not(.keythm-key):active,
+.github-button:active {
+  transform: translateY(0) scale(0.97);
+}
+
 button:focus-visible,
 #text-to-type-container:focus-visible {
   outline: 2px solid var(--accent);
@@ -110,6 +125,7 @@ button:focus-visible,
 .ghost-button:hover {
   color: var(--accent);
   background: var(--panel-hover);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 .github-button {
@@ -128,6 +144,7 @@ button:focus-visible,
 
 .github-button:hover {
   background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 .github-button svg {
@@ -228,6 +245,7 @@ button:focus-visible,
 .timer-toggle-option:hover {
   color: var(--text);
   background: var(--panel-hover);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .timer-toggle-option.selected {
@@ -333,6 +351,7 @@ button:focus-visible,
 
 #reset-button:hover {
   color: var(--accent);
+  background: var(--panel);
 }
 
 .restart-hint {
@@ -601,6 +620,11 @@ kbd {
   .spark-cursor {
     transition: none;
   }
+
+  button:not(.keythm-key):hover,
+  .github-button:hover {
+    transform: none;
+  }
 }
 
 @keyframes chart-draw {
@@ -864,6 +888,16 @@ kbd {
   border-color: var(--accent);
   color: #111;
   font-weight: 600;
+}
+
+.results-actions button:hover {
+  border-color: var(--muted-strong);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+.results-actions .restart-action:hover {
+  background: #ff8c55;
+  border-color: #ff8c55;
 }
 
 @media (max-width: 800px) {
