@@ -175,7 +175,7 @@ export const SOUND_DEFINES_UP: Record<string, [number, number]> = {
 }
 
 /* The sprite is fetched on import so it is usually decoded by first keypress. */
-const SOUND_URL = '/sounds/sound.ogg'
+const SOUND_URL = `${import.meta.env.BASE_URL}sounds/sound.ogg`
 let cachedBuffer: ArrayBuffer | null = null
 let fetchPromise: Promise<ArrayBuffer | null> | null = null
 
