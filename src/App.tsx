@@ -80,8 +80,6 @@ export default function App() {
   const [selectedTestDuration, setSelectedTestDuration, selectedTestDurationRef] = useSyncState(30)
   const [resultsVisible, setResultsVisible, resultsVisibleRef] = useSyncState(false)
   const [keyboardVisible, setKeyboardVisible] = useSyncState(false)
-  const [wpmDisplayVisible, setWpmDisplayVisible] = useState(true)
-  const [accuracyDisplayVisible, setAccuracyDisplayVisible] = useState(true)
   const [peakWpm, setPeakWpm] = useState(0)
   const [avgWpm, setAvgWpm] = useState(0)
   const [finalAccuracy, setFinalAccuracy] = useState(0)
@@ -94,6 +92,7 @@ export default function App() {
   const textToTypeRef = useRef<HTMLDivElement>(null)
   const startTimeRef = useRef(0)
   const pauseStartTimeRef = useRef(0)
+  const tabPressedRef = useRef(false)
   const snackbarTimeoutRef = useRef<number | undefined>(undefined)
   const tipsTimeoutRef = useRef<number | undefined>(undefined)
 
@@ -143,10 +142,6 @@ export default function App() {
     updateStats()
     setKeyboardVisible(false)
     setResultsVisible(true)
-    if (infiniteModeRef.current) {
-      setWpmDisplayVisible(false)
-      setAccuracyDisplayVisible(false)
-    }
   }, [updateStats])
 
   const calculateWPM = useCallback((secs: number) => {
@@ -187,8 +182,6 @@ export default function App() {
     setResultsVisible(false)
     if (inputAreaRef.current) inputAreaRef.current.value = ''
     setWpmHistory([])
-    setWpmDisplayVisible(true)
-    setAccuracyDisplayVisible(true)
     inputAreaRef.current?.focus()
   }, [])
 
@@ -246,10 +239,6 @@ export default function App() {
     setAvgWpm(0)
     setFinalAccuracy(0)
     initializeText()
-    if (!infiniteModeRef.current) {
-      setWpmDisplayVisible(true)
-      setAccuracyDisplayVisible(true)
-    }
     inputAreaRef.current?.focus()
   }, [initializeText])
 
@@ -403,6 +392,19 @@ export default function App() {
         return
       }
 
+      if (e.key === 'Tab') {
+        tabPressedRef.current = true
+        return
+      }
+      if (e.key === 'Enter' && tabPressedRef.current) {
+        tabPressedRef.current = false
+        resetTest()
+        return
+      }
+      if (e.key !== 'Enter') {
+        tabPressedRef.current = false
+      }
+
       if (!testActiveRef.current && resultsVisibleRef.current) {
         return
       }
@@ -448,84 +450,86 @@ export default function App() {
   const textNodes = currentText.split('')
 
   return (
-    <div className="container">
-      <header className="app-header">
-        <div className="logo" />
+    <div className="app">
+      <header className="topbar">
+        <div className="brand">
+          keythm<span className="brand-flame" aria-hidden="true">🔥</span>
+        </div>
+        <div className="topbar-right">
+          {testActive && (
+            <>
+              <span className="top-stat">
+                {timerValue}<span className="top-stat-label">s</span>
+              </span>
+              <span className="top-stat">
+                {wpm}<span className="top-stat-label">wpm</span>
+              </span>
+              <span className="top-stat">
+                {accuracy}<span className="top-stat-label">acc</span>
+              </span>
+            </>
+          )}
+          <button className="ghost-button" onClick={toggleKeyboard} aria-label="Toggle virtual keyboard">
+            keyboard
+          </button>
+        </div>
       </header>
 
-      <div className="display-row">
-        <div className="keystroke-info">
-          <div id="next-keystroke" className={cx('next-keystroke', nextChar && 'visible')}>
-            {nextChar || ''}
+      <main className="typing-area">
+        <div className="display-row">
+          <div className="keystroke-info">
+            <div id="next-keystroke" className={cx('next-keystroke', nextChar && 'visible')}>
+              {nextChar || ''}
+            </div>
+            <div id="english-equivalent" className={cx('english-equivalent-display', nextChar && 'visible')}>
+              {nextChar ? requiredKeys.join(' + ') : ''}
+            </div>
           </div>
-          <div id="english-equivalent" className={cx('english-equivalent-display', nextChar && 'visible')}>
-            {nextChar ? requiredKeys.join(' + ') : ''}
+          <TimerPanel
+            visible={timerVisible && !testActive}
+            toggles={TIMER_TOGGLES}
+            selected={infiniteMode ? 0 : selectedTestDuration}
+            onToggle={onTimerToggle}
+          />
+        </div>
+
+        <div id="text-to-type-container" tabIndex={0} ref={containerRef} onClick={focusInput} onFocus={focusInput}>
+          <div id="text-to-type" ref={textToTypeRef}>
+            {textNodes.map((ch, i) => (
+              <span key={i} className={spanClass(i)}>
+                {ch}
+              </span>
+            ))}
           </div>
         </div>
-        <TimerPanel
-          visible={timerVisible}
-          toggles={TIMER_TOGGLES}
-          selected={infiniteMode ? 0 : selectedTestDuration}
-          timerValue={timerValue}
-          onToggle={onTimerToggle}
+
+        <textarea
+          id="input-area"
+          lang="km"
+          rows={1}
+          autoFocus
+          spellCheck={false}
+          autoCapitalize="none"
+          autoComplete="off"
+          autoCorrect="off"
+          ref={inputAreaRef}
+          onChange={(e) => handleInput(e.target.value)}
         />
-      </div>
 
-      <div className={cx('wpm-display', !wpmDisplayVisible && 'hidden')}>
-        <span id="wpm" className="wpm-value">
-          {wpm}
-        </span>
-        <span className="wpm-label-khmer">ពាក្យ/នាទី</span>
-      </div>
-      <div className={cx('accuracy-display', !accuracyDisplayVisible && 'hidden')}>
-        <span id="accuracy" className="accuracy-value">
-          {accuracy}
-        </span>
-        <span className="accuracy-label-khmer">ព្យញ្ជនៈ &amp; ស្រះ</span>
-      </div>
-
-      <div id="text-to-type-container" tabIndex={0} ref={containerRef} onClick={focusInput} onFocus={focusInput}>
-        <div id="text-to-type" ref={textToTypeRef}>
-          {textNodes.map((ch, i) => (
-            <span key={i} className={spanClass(i)}>
-              {ch}
-            </span>
-          ))}
+        <div className="controls">
+          <button id="reset-button" title="ចាប់ផ្តើមឡើងវិញ" onClick={resetTest} aria-label="Restart test">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M18.5374 19.5674C16.7844 21.0831 14.4993 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 14.1355 21.3302 16.1158 20.1892 17.7408L17.7583 15.31C18.0499 14.3687 18.2222 13.3639 18.2222 12.2727C18.2222 8.82037 15.4019 6 12 6C8.59812 6 5.77778 8.82037 5.77778 12.2727C5.77778 15.7251 8.59812 18.5455 12 18.5455C13.8351 18.5455 15.4915 17.8064 16.7096 16.5883L18.5374 19.5674ZM20 5H22V2H19V4L16.8919 2.89191C17.5998 2.32666 18.3971 1.88251 19.2598 1.57409L19.8329 0.167075C18.7773 0.533381 17.7908 1.05803 16.8919 1.71603L14.9985 0.768066L14.2319 2.43203L16.1254 3.37999C15.3887 4.04033 14.7606 4.80186 14.2681 5.63806L12.5 5V7H14.5L17.5 7H20V5Z" />
+            </svg>
+          </button>
+          <span className="restart-hint">
+            <kbd>tab</kbd> + <kbd>enter</kbd> <span>restart</span>
+          </span>
         </div>
-      </div>
-
-      <textarea
-        id="input-area"
-        lang="km"
-        rows={1}
-        autoFocus
-        spellCheck={false}
-        autoCapitalize="none"
-        autoComplete="off"
-        autoCorrect="off"
-        ref={inputAreaRef}
-        onChange={(e) => handleInput(e.target.value)}
-      />
+      </main>
 
       <div className={cx('virtual-keyboard-container', !keyboardVisible && 'hidden')}>
         <VirtualKeyboard isShiftActive={isShiftActive} requiredKeys={new Set(requiredKeys)} />
-      </div>
-
-      <div className="controls">
-        <button
-          id="toggle-keyboard-button"
-          title="បង្ហាញ/លាក់ក្តារចុចនិម្មិត"
-          onClick={toggleKeyboard}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-            <path d="M20 5H4C2.89543 5 2 5.89543 2 7V17C2 18.1046 2.89543 19 4 19H20C21.1046 19 22 18.1046 22 17V7C22 5.89543 21.1046 5 20 5ZM4 7H20V10H4V7ZM4 12H7V14H4V12ZM9 12H12V14H9V12ZM14 12H17V14H14V12ZM4 15H7V17H4V15ZM9 15H12V17H9V15ZM14 15H17V17H14V15ZM18 12H20V17H18V12Z" />
-          </svg>
-        </button>
-        <button id="reset-button" title="ចាប់ផ្តើមឡើងវិញ" onClick={resetTest}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-            <path d="M18.5374 19.5674C16.7844 21.0831 14.4993 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 14.1355 21.3302 16.1158 20.1892 17.7408L17.7583 15.31C18.0499 14.3687 18.2222 13.3639 18.2222 12.2727C18.2222 8.82037 15.4019 6 12 6C8.59812 6 5.77778 8.82037 5.77778 12.2727C5.77778 15.7251 8.59812 18.5455 12 18.5455C13.8351 18.5455 15.4915 17.8064 16.7096 16.5883L18.5374 19.5674ZM20 5H22V2H19V4L16.8919 2.89191C17.5998 2.32666 18.3971 1.88251 19.2598 1.57409L19.8329 0.167075C18.7773 0.533381 17.7908 1.05803 16.8919 1.71603L14.9985 0.768066L14.2319 2.43203L16.1254 3.37999C15.3887 4.04033 14.7606 4.80186 14.2681 5.63806L12.5 5V7H14.5L17.5 7H20V5Z" />
-          </svg>
-        </button>
       </div>
 
       <Results

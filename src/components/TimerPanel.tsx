@@ -10,14 +10,13 @@ interface TimerPanelProps {
   visible: boolean
   toggles: TimerToggle[]
   selected: number
-  timerValue: number | string
   onToggle: (time: number) => void
 }
 
-export default function TimerPanel({ visible, toggles, selected, timerValue, onToggle }: TimerPanelProps) {
+export default function TimerPanel({ visible, toggles, selected, onToggle }: TimerPanelProps) {
   if (!visible) return null
   return (
-    <div id="timer-display" className={cx('timer-display', 'timer-box', !visible && 'hidden')}>
+    <div id="timer-display" className="timer-display timer-box">
       <div className="timer-toggle">
         {toggles.map((t) => (
           <button
@@ -30,9 +29,6 @@ export default function TimerPanel({ visible, toggles, selected, timerValue, onT
           </button>
         ))}
       </div>
-      <span id="timer" className="timer-value">
-        {timerValue}
-      </span>
     </div>
   )
 }
