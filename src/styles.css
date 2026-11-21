@@ -80,16 +80,29 @@ button:focus-visible,
 }
 
 .brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
   color: var(--accent);
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1;
+  text-decoration: none;
 }
 
-.brand-flame {
-  font-size: 18px;
-  margin-left: 6px;
+.brand-by {
+  font-family: var(--font-stats);
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: var(--muted-strong);
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.brand:hover .brand-by {
+  color: var(--accent);
+  text-shadow: 0 0 10px var(--accent), 0 0 20px rgba(255, 122, 61, 0.5);
 }
 
 .topbar-right {

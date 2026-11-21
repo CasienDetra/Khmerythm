@@ -442,9 +442,9 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">
-          khmerythm<span className="brand-flame" aria-hidden="true">🔥</span>
-        </div>
+        <a className="brand" href="https://github.com/CasienDetra" target="_blank" rel="noopener noreferrer">
+          Khmerythm<span className="brand-by">by Casein</span>
+        </a>
         <div className="topbar-right">
           {testActive && (
             <>
