@@ -1,4 +1,4 @@
-import { BarChart, DonutChart, Gauge, Sparkline, type BarDatum, type ChartPoint, type Slice } from './charts'
+import { Sparkline, type ChartPoint } from './charts'
 import { cx } from '../cx'
 
 export interface WpmPoint {
@@ -10,68 +10,120 @@ interface ResultsProps {
   visible: boolean
   avgWpm: number
   peakWpm: number
+  rawWpm: number
   finalAccuracy: number
+  correctChars: number
+  incorrectChars: number
   wpmHistory: WpmPoint[]
   selectedTestDuration: number
+  onRestart: () => void
 }
 
-function buildBars(series: WpmPoint[]): BarDatum[] {
-  if (series.length <= 10) {
-    return series.map((p) => ({ label: `${p.time}s`, value: p.wpm }))
-  }
-  const bucket = Math.ceil(series.length / 10)
-  const bars: BarDatum[] = []
-  for (let i = 0; i < series.length; i += bucket) {
-    const chunk = series.slice(i, i + bucket)
-    const avg = Math.round(chunk.reduce((sum, p) => sum + p.wpm, 0) / chunk.length)
-    bars.push({ label: `${chunk[0].time}s`, value: avg })
-  }
-  return bars
+function consistencyOf(history: WpmPoint[]): number {
+  if (history.length < 2) return 100
+  const values = history.map((p) => p.wpm)
+  const avg = values.reduce((a, b) => a + b, 0) / values.length
+  if (!avg) return 100
+  const sd = Math.sqrt(values.reduce((sum, v) => sum + (v - avg) ** 2, 0) / values.length)
+  return Math.max(0, Math.min(100, Math.round(100 - (sd / avg) * 100)))
 }
 
-export default function Results({ visible, avgWpm, peakWpm, finalAccuracy, wpmHistory, selectedTestDuration }: ResultsProps) {
+export default function Results({
+  visible,
+  avgWpm,
+  peakWpm,
+  rawWpm,
+  finalAccuracy,
+  correctChars,
+  incorrectChars,
+  wpmHistory,
+  selectedTestDuration,
+  onRestart,
+}: ResultsProps) {
   const series = wpmHistory.length ? wpmHistory : [
     { time: 0, wpm: 0 },
     { time: selectedTestDuration, wpm: 0 },
   ]
   const points: ChartPoint[] = series.map((p) => ({ label: `${p.time}s`, value: p.wpm }))
-  const bars = buildBars(series)
-  const barMax = Math.max(10, Math.ceil(peakWpm / 10) * 10)
-  const ticks = [0, Math.round(barMax / 2), barMax]
-  const slices: Slice[] = [
-    { label: 'ត្រឹមត្រូវ', value: wpmHistory.length ? finalAccuracy : 0, color: '#ff7a3d' },
-    { label: 'ខុស', value: wpmHistory.length ? 100 - finalAccuracy : 0, color: '#f38ba8' },
-  ]
+
+  const copyImage = async () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1000
+    canvas.height = 520
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.fillStyle = '#111113'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.font = '700 96px "Roboto Mono", monospace'
+    ctx.fillStyle = '#ff7a3d'
+    ctx.fillText(String(avgWpm), 60, 140)
+    ctx.fillStyle = '#d8d8dd'
+    ctx.fillText(`${finalAccuracy}%`, 330, 140)
+    ctx.font = '400 20px "Roboto Mono", monospace'
+    ctx.fillStyle = '#9b9ca5'
+    ctx.fillText('WPM', 60, 180)
+    ctx.fillText('ACCURACY', 330, 180)
+    ctx.fillText(`RAW ${rawWpm}   CONSISTENCY ${consistencyOf(wpmHistory)}%   BEST ${peakWpm}`, 60, 230)
+    const min = Math.min(...series.map((p) => p.wpm))
+    const max = Math.max(...series.map((p) => p.wpm))
+    const span = max - min || 1
+    ctx.strokeStyle = '#ff7a3d'
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    series.forEach((p, i) => {
+      const x = 60 + (i / Math.max(series.length - 1, 1)) * 880
+      const y = 470 - ((p.wpm - min) / span) * 200
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    })
+    ctx.stroke()
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+    if (!blob) return
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+    } catch {
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'khmerythm-results.png'
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+  }
 
   return (
     <div id="results" className={cx('results', !visible && 'hidden')}>
       <div className="results-content">
-        <div className="results-charts">
-          <section className="chart-card chart-card-wide">
-            <Sparkline data={points} title="ល្បឿនតាមពេលវេលា" format={(v) => `${v} wpm`} />
-          </section>
-          <section className="chart-card">
-            <Gauge value={finalAccuracy} label="ភាពត្រឹមត្រូវ" />
-          </section>
-          <section className="chart-card chart-card-wide">
-            <BarChart data={bars} max={barMax} ticks={ticks} suffix="wpm" label="ល្បឿនក្នុងមួយចន្លោះ" />
-          </section>
-          <section className="chart-card">
-            <DonutChart data={slices} label="តួអក្សរ" />
-          </section>
+        <div className="results-hero">
+          <div className="hero-stat">
+            <strong className="hero-accent">{avgWpm}</strong>
+            <span>WPM</span>
+          </div>
+          <div className="hero-stat">
+            <strong>{finalAccuracy}<small>%</small></strong>
+            <span>ACCURACY</span>
+          </div>
         </div>
-        <div className="results-stats-section">
-          <div className="stat-block">
-            <div className="stat-value" id="avg-wpm">{avgWpm}</div>
-            <div className="stat-label-khmer">ពាក្យ/នាទី</div>
+        <div className="results-detail">
+          <div><b>{rawWpm}</b><span>RAW</span></div>
+          <div><b>{consistencyOf(wpmHistory)}%</b><span>CONSISTENCY</span></div>
+          <div><b>{peakWpm}</b><span>BEST</span></div>
+        </div>
+        <div className="results-panel">
+          <div className="results-panel-head">
+            <div className="results-live">
+              <span>WPM</span><b>{rawWpm}</b>
+              <span>ACC</span><b>{finalAccuracy}%</b>
+            </div>
+            <div className="results-counts">
+              <span>CORRECT <b>{correctChars}</b></span>
+              <span>INCORRECT <b>{incorrectChars}</b></span>
+            </div>
           </div>
-          <div className="stat-block">
-            <div className="stat-value" id="final-accuracy">{finalAccuracy}%</div>
-            <div className="stat-label-khmer">ព្យញ្ជនៈ &amp; ស្រះ</div>
-          </div>
-          <div className="stat-block">
-            <div className="stat-value" id="peak-wpm">{peakWpm}</div>
-            <div className="stat-label-khmer">ល្បឿនលឿនបំផុត</div>
+          <Sparkline data={points} format={(v) => `${v} wpm`} />
+          <div className="results-actions">
+            <button className="restart-action" onClick={onRestart}>↻ Restart</button>
+            <button onClick={copyImage}>Copy image</button>
           </div>
         </div>
       </div>

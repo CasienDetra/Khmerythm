@@ -539,9 +539,13 @@ export default function App() {
         visible={resultsVisible}
         avgWpm={avgWpm}
         peakWpm={peakWpm}
+        rawWpm={wpm}
         finalAccuracy={finalAccuracy}
+        correctChars={Math.max(0, typedText.length - chars.errors)}
+        incorrectChars={chars.errors}
         wpmHistory={wpmHistory}
         selectedTestDuration={selectedTestDuration}
+        onRestart={resetTest}
       />
 
       <Tip visible={tipsVisible} />
