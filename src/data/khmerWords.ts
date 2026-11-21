@@ -1,6 +1,5 @@
-// khmer_words.js
-// Import the frequency list
-const frequencyList = [
+/* Port of the original plain-JS data module. */
+const frequencyList: string[] = [
     "បាន", "ការ", "នៅ", "និង", "ដែល", "មាន", "ជា", "នេះ", "ថា", "ក្នុង",
     "របស់", "លោក", "ពី", "មួយ", "នឹង", "ឲ្យ", "នោះ", "មិន", "ទៅ", "តែ",
     "ត្រូវ", "ដោយ", "ហើយ", "ឆ្នាំ", "អ្នក", "ពេល", "គេ", "ខ្ញុំ", "ប្រទេស", "អាច",
@@ -48,7 +47,7 @@ const frequencyList = [
     "សំណេះសំណាល", "ឡើង", "បើក", "កម្មវិធី", "សំរាប់", "រៀន", "ឯករាជ្យ", "ទី", "សុខភាព", "សង្ខេប",
     "បញ្ចេញ", "សង្រ្គាម", "ចាំបាច់", "ការ", "ឋានានុក្រឹត", "ដើម", "ចំណាំ", "ឆ្លើយ", "ទីលាន", "ធានា",
     "ឧក្រិដ្ឋកម្ម", "អនុសាសន៍", "បញ្ជូន", "ផ្លាស់ប្តូរ", "ចំអិន", "ទៅកាន់", "យោបល់", "កិច្ចការ", "កំពូល", "អ្នកគ្រូ",
-    "អនុវត្តន៍", "ដោះស្រាយ", "ចាក់", "តារា", "ចំណេះ", "ការសិក្សា", "តំណែង", "បង្ហាញ", "សង្កាត់", "ឧក្រិដ្ឋជន",
+    "អនុវត្តន៍", "ដោះស្រាយ", "ចាក់", "តារា", "ចំណេះ", "ការសិក្សា", "តំណគង់", "បង្ហាញ", "សង្កាត់", "ឧក្រិដ្ឋជន",
     "ភពផែនដី", "សហគមន៍", "សង្ខេប", "ចងចាំ", "មូលនិធិ", "ឧបត្ថម្ភ", "បរិស្ថាន", "ឧបករណ៍", "សង្គ្រោះ", "ពិសោធន៍",
     "អនុញ្ញាត", "ដំណើរការ", "សហជីព", "សមិទ្ធផល", "មន្ទីរ", "ប្រយោជន៍", "ទាញយក", "សម័យ", "ពិធី", "សម្បត្តិ",
     "បង្ក", "សេចក្ដី", "ចង", "កែប្រែ", "ដឹកនាំ", "អប់រំ", "សាសនា", "ផែនការ", "ជំនាញ", "អាជីវកម្ម",
@@ -62,25 +61,22 @@ const frequencyList = [
     "អប់រំ", "ឯកសារ", "មូលនិធិ", "ព្រះ", "តុលាការ", "ច្បាប់", "សហគមន៍", "ព្រម", "អនុវត្ត", "វិទ្យាស្ថាន"
 ];
 
-// Function to get a random word, with higher probability for more frequent words
-function getRandomWord() {
-    // Use exponential distribution to favor more frequent words
+/* Squared random: frequent words appear more often. */
+function getRandomWord(): string {
     const index = Math.floor(Math.pow(Math.random(), 2) * frequencyList.length);
     return frequencyList[index];
 }
 
-// Function to generate a random paragraph with specified number of words
-function generateRandomParagraph(wordCount = 20) {
-    let paragraph = [];
+function generateRandomParagraph(wordCount = 20): string {
+    const paragraph: string[] = [];
     for (let i = 0; i < wordCount; i++) {
         paragraph.push(getRandomWord());
     }
     return paragraph.join(' ');
 }
 
-// Function to generate multiple paragraphs
-function generateRandomTexts(count = 10, minWords = 15, maxWords = 25) {
-    const texts = [];
+function generateRandomTexts(count = 10, minWords = 15, maxWords = 25): string[] {
+    const texts: string[] = [];
     for (let i = 0; i < count; i++) {
         const wordCount = Math.floor(Math.random() * (maxWords - minWords + 1)) + minWords;
         texts.push(generateRandomParagraph(wordCount));
@@ -88,5 +84,4 @@ function generateRandomTexts(count = 10, minWords = 15, maxWords = 25) {
     return texts;
 }
 
-// Export the functions and word list
-export { frequencyList, getRandomWord, generateRandomParagraph, generateRandomTexts }; 
+export { frequencyList, getRandomWord, generateRandomParagraph, generateRandomTexts };
