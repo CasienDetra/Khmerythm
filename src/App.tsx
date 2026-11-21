@@ -453,7 +453,7 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          keythm<span className="brand-flame" aria-hidden="true">🔥</span>
+          khmerythm<span className="brand-flame" aria-hidden="true">🔥</span>
         </div>
         <div className="topbar-right">
           {testActive && (
