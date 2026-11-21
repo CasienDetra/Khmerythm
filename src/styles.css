@@ -759,6 +759,24 @@ kbd {
   transition: opacity 0.2s ease;
 }
 
+.spark-line-ghost {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.spark-plot.is-hovering .spark-line-ghost {
+  opacity: 0.35;
+}
+
+.spark-plot.is-hovering .spark-area {
+  opacity: 0.7;
+}
+
 .spark-line {
   fill: none;
   stroke: var(--accent);
@@ -775,7 +793,7 @@ kbd {
   inset: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.12s ease;
+  transition: opacity 0.15s ease;
 }
 
 .spark-cursor.is-active {
@@ -810,6 +828,7 @@ kbd {
   font-family: var(--font-stats);
   font-size: 11px;
   white-space: nowrap;
+  transition: opacity 0.15s ease;
 }
 
 .spark-axis {
