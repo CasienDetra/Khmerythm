@@ -112,6 +112,30 @@ button:focus-visible,
   background: var(--panel-hover);
 }
 
+.github-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f5f5f5;
+  color: #18181b;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.github-button:hover {
+  background: #fff;
+}
+
+.github-button svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
 .typing-area {
   flex: 1;
   width: 100%;
@@ -330,97 +354,132 @@ kbd {
   font-size: 11px;
 }
 
-.virtual-keyboard-container {
-  width: min(100% - 48px, 1000px);
-  margin: 0 auto 32px;
-  padding: 16px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.virtual-keyboard-container.hidden {
-  display: none;
-}
-
-.keyboard-row {
+.keyboard-slot {
+  width: 100%;
   display: flex;
   justify-content: center;
-  gap: 6px;
+  margin-bottom: 32px;
 }
 
-.keyboard-key {
+.keythm-keyboard {
   font-family: var(--font-main);
-  background: var(--panel-hover);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 0;
-  min-width: 42px;
-  height: 64px;
+}
+
+.keythm-keyboard-shell {
+  display: inline-block;
+  padding: 12px;
+  border: 2px solid #000;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.keythm-keyboard-body {
+  height: 278px;
+  border: 1px solid #3f3f46;
+  border-radius: 5px 5px 8px 8px;
+  background: rgba(39, 39, 42, 0.9);
+  padding-top: 4px;
+}
+
+.keythm-keyboard-rows {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  transform: translateY(-4px);
+}
+
+.keythm-keyboard-row {
+  display: flex;
+  gap: 2px;
+  height: 50px;
+  margin-top: -2px;
+}
+
+.keythm-key {
+  display: flex;
+  align-items: flex-end;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.keythm-key-base {
+  position: relative;
+  height: 50px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 4px 4px 12px 12px;
+  transition: height 0.1s ease;
+}
+
+.keythm-key-base.is-pressed {
+  height: 45px;
+}
+
+.keythm-key-cap {
+  position: relative;
+  z-index: 1;
+  height: 37px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  line-height: 1.2;
+  justify-content: space-between;
+  gap: 2px;
+  padding: 4px 2px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-top: 0;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
   user-select: none;
-  flex-grow: 1;
-  flex-basis: 0;
+  overflow: hidden;
 }
 
-.keyboard-key .khmer-char {
-  color: #f5e0dc;
+.keythm-key-cap.is-required {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
-.keyboard-key .english-char {
-  color: #b4befe;
-  font-family: var(--font-stats);
-  font-size: 0.85em;
+.keythm-key-shift {
+  opacity: 0.6;
 }
 
-.keyboard-key.required-key,
-.keyboard-key.required-key .khmer-char,
-.keyboard-key.required-key .english-char {
-  background: var(--accent);
-  color: var(--bg);
+.keythm-key-shift.is-active {
+  opacity: 1;
+  color: var(--accent);
+  font-weight: 700;
 }
 
-.keyboard-key.active {
-  border-color: var(--accent);
+.keythm-key-normal {
+  font-size: 13px;
 }
 
-.keyboard-key.key-backspace,
-.keyboard-key.key-enter {
-  flex-grow: 2;
+.keythm-key-wing {
+  position: absolute;
+  bottom: 0;
+  width: 32px;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease;
 }
 
-.keyboard-key.key-tab,
-.keyboard-key.key-backslash {
-  flex-grow: 1.5;
+.keythm-key-wing-right {
+  right: 0;
+  transform: translateX(14px) rotate(70deg);
 }
 
-.keyboard-key.key-capslock {
-  flex-grow: 1.75;
+.keythm-key-wing-left {
+  left: 0;
+  transform: translateX(-14px) rotate(-70deg);
 }
 
-.keyboard-key.key-shift {
-  flex-grow: 2.5;
+.is-pressed .keythm-key-wing-right {
+  transform: translateX(14px) rotate(60deg);
 }
 
-.keyboard-key.key-ctrl {
-  flex-grow: 1.5;
-}
-
-.keyboard-key.key-alt,
-.keyboard-key.key-altgr {
-  flex-grow: 1.25;
-}
-
-.keyboard-key.key-space {
-  flex-grow: 5.5;
+.is-pressed .keythm-key-wing-left {
+  transform: translateX(-14px) rotate(-60deg);
 }
 
 .results {
