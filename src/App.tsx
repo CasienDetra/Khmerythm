@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { cx } from './cx'
 import { useSyncState } from './useSyncState'
 import Keyboard from './components/keyboard'
 import { toKeyCodes } from './components/keyboard/layout'
 import Results from './components/Results'
 import TimerPanel, { type TimerToggle } from './components/TimerPanel'
-import Tip from './components/Tip'
 import { getRandomText } from './data/khmerTexts'
 import { getRequiredKeysForChar, splitKhmerText } from './keyboardLayout'
+import { clusterKhmerText } from './khmerClusters'
 
 const MAX_WORDS = 30
 
@@ -32,7 +32,6 @@ const NON_STARTING_KEYS = [
 ]
 
 const SNACKBAR_DURATION = 5000
-const TIP_HIDE_DELAY = 5000
 
 function generateWordSet(): string[] {
   const words: string[] = []
@@ -43,25 +42,41 @@ function generateWordSet(): string[] {
   return words.slice(0, MAX_WORDS)
 }
 
-function computeChars(typed: string, text: string, shiftDown: boolean) {
+function computeChars(typed: string, clusters: string[], shiftDown: boolean) {
+  const typedChars = Array.from(typed)
   const classes: string[] = []
+  const progress: number[] = []
   let errors = 0
   let nextChar: string | null = null
-  for (let i = 0; i < text.length; i++) {
-    const expected = text[i]
-    const typedCh = typed[i]
-    const expectedNeedsShift = getRequiredKeysForChar(expected).includes('shift')
-    const matched = typedCh === expected && (expectedNeedsShift ? shiftDown : !shiftDown)
-    if (i < typed.length) {
-      classes.push(matched ? 'correct' : 'incorrect')
-      if (!matched) errors++
-    } else if (i === typed.length) {
+  let pos = 0
+  for (const cluster of clusters) {
+    const expectedChars = Array.from(cluster)
+    let mismatch = false
+    for (const expected of expectedChars) {
+      const typedCh = typedChars[pos]
+      const expectedNeedsShift = getRequiredKeysForChar(expected).includes('shift')
+      const matched = typedCh === expected && (expectedNeedsShift ? shiftDown : !shiftDown)
+      if (pos < typedChars.length && !matched) {
+        errors++
+        mismatch = true
+      }
+      pos++
+    }
+    const clusterStart = pos - expectedChars.length
+    const typedInCluster = Math.max(0, Math.min(typedChars.length - clusterStart, expectedChars.length))
+    progress.push(typedInCluster)
+    if (typedInCluster === expectedChars.length && typedInCluster > 0) {
+      classes.push(mismatch ? 'incorrect' : 'correct')
+    } else if (typedInCluster > 0) {
+      classes.push(mismatch ? 'incorrect partial' : 'partial')
+      if (nextChar === null) nextChar = expectedChars[typedInCluster]
+    } else if (typedChars.length === clusterStart) {
       classes.push('current')
-      if (typed.length < text.length) nextChar = text[i]
+      if (nextChar === null) nextChar = expectedChars[0]
     }
   }
-  if (typed.length > text.length) errors += typed.length - text.length
-  return { classes, errors, nextChar }
+  if (typedChars.length > pos) errors += typedChars.length - pos
+  return { classes, progress, errors, nextChar }
 }
 
 export default function App() {
@@ -86,7 +101,6 @@ export default function App() {
   const [finalAccuracy, setFinalAccuracy] = useState(0)
   const [accuracy, setAccuracy, accuracyRef] = useSyncState(0)
   const [snackbar, setSnackbar] = useState({ message: '', visible: false })
-  const [tipsVisible, setTipsVisible] = useState(false)
 
   const inputAreaRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -95,11 +109,13 @@ export default function App() {
   const pauseStartTimeRef = useRef(0)
   const tabPressedRef = useRef(false)
   const snackbarTimeoutRef = useRef<number | undefined>(undefined)
-  const tipsTimeoutRef = useRef<number | undefined>(undefined)
+  const clusterTextRefs = useRef(new Map<number, HTMLSpanElement>())
+  const clusterOverlayRefs = useRef(new Map<number, HTMLSpanElement>())
 
+  const clusters = useMemo(() => clusterKhmerText(currentText), [currentText])
   const chars = useMemo(
-    () => computeChars(typedText, currentText, physicalShiftKeyDown),
-    [typedText, currentText, physicalShiftKeyDown],
+    () => computeChars(typedText, clusters, physicalShiftKeyDown),
+    [typedText, clusters, physicalShiftKeyDown],
   )
   const nextChar = chars.nextChar
   const requiredKeys = nextChar ? getRequiredKeysForChar(nextChar) : []
@@ -199,7 +215,6 @@ export default function App() {
         if (inputAreaRef.current) inputAreaRef.current.value = ''
         return
       }
-      hideTips()
       setTypedText(value)
       updateTextWords()
       const current = currentTextRef.current
@@ -250,17 +265,6 @@ export default function App() {
       inputAreaRef.current?.focus()
     }
   }, [updateStats])
-
-  const showTips = useCallback(() => {
-    setTipsVisible(true)
-    window.clearTimeout(tipsTimeoutRef.current)
-    tipsTimeoutRef.current = window.setTimeout(() => setTipsVisible(false), TIP_HIDE_DELAY)
-  }, [])
-
-  const hideTips = useCallback(() => {
-    window.clearTimeout(tipsTimeoutRef.current)
-    setTipsVisible(false)
-  }, [])
 
   const hideKeyboard = useCallback(() => setKeyboardVisible(false), [])
 
@@ -320,13 +324,21 @@ export default function App() {
   }, [testActive, infiniteMode, calculateWPM, pushWpm])
 
   useEffect(() => {
-    const { errors: errCount } = computeChars(typedText, currentText, physicalShiftKeyDown)
+    const { errors: errCount } = computeChars(typedText, clusters, physicalShiftKeyDown)
     const acc =
       typedText.length === 0
         ? 0
         : Math.max(0, Math.round(((typedText.length - errCount) / typedText.length) * 100))
     setAccuracy(acc)
-  }, [typedText, currentText, physicalShiftKeyDown])
+  }, [typedText, clusters, physicalShiftKeyDown])
+
+  useLayoutEffect(() => {
+    clusters.forEach((_, i) => {
+      const overlay = clusterOverlayRefs.current.get(i)
+      if (!overlay) return
+      overlay.parentElement?.style.setProperty('--split', `${overlay.getBoundingClientRect().width}px`)
+    })
+  }, [clusters, chars.progress])
 
   useEffect(() => {
     const container = containerRef.current
@@ -344,20 +356,10 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const onMouseMove = () => {
-      if (!keyboardVisible && !testActive && !resultsVisible) {
-        showTips()
-      }
-    }
-    document.addEventListener('mousemove', onMouseMove)
-    return () => document.removeEventListener('mousemove', onMouseMove)
-  }, [keyboardVisible, testActive, resultsVisible, showTips])
-
-  useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey && !e.altKey && !e.ctrlKey) {
         const keyLower = e.key.toLowerCase()
-        if (['k', ',', '.', 'i'].includes(keyLower)) {
+        if (['k', ',', '.'].includes(keyLower)) {
           e.preventDefault()
           switch (keyLower) {
             case 'k':
@@ -368,9 +370,6 @@ export default function App() {
               break
             case '.':
               resetTest()
-              break
-            case 'i':
-              showTips()
               break
           }
           return
@@ -418,7 +417,7 @@ export default function App() {
       document.removeEventListener('keydown', onKeyDown)
       document.removeEventListener('keyup', onKeyUp)
     }
-  }, [toggleKeyboard, togglePause, resetTest, showTips, startTest])
+  }, [toggleKeyboard, togglePause, resetTest, startTest])
 
   const onTimerToggle = useCallback(
     (time: number) => {
@@ -437,7 +436,6 @@ export default function App() {
     [resetTest],
   )
 
-  const textNodes = currentText.split('')
 
   return (
     <div className="app">
@@ -496,11 +494,35 @@ export default function App() {
 
         <div id="text-to-type-container" tabIndex={0} ref={containerRef} onClick={focusInput} onFocus={focusInput}>
           <div id="text-to-type" ref={textToTypeRef}>
-            {textNodes.map((ch, i) => (
-              <span key={i} className={spanClass(i)}>
-                {ch}
-              </span>
-            ))}
+            {clusters.map((cluster, i) => {
+              const typed = chars.progress[i]
+              const partial = typed > 0 && typed < Array.from(cluster).length
+              return (
+                <span key={i} className={cx('cluster', spanClass(i))}>
+                  <span
+                    className="cluster-text"
+                    ref={(el) => {
+                      if (el) clusterTextRefs.current.set(i, el)
+                      else clusterTextRefs.current.delete(i)
+                    }}
+                  >
+                    {cluster}
+                  </span>
+                  {partial && (
+                    <span
+                      className="cluster-typed"
+                      aria-hidden="true"
+                      ref={(el) => {
+                        if (el) clusterOverlayRefs.current.set(i, el)
+                        else clusterOverlayRefs.current.delete(i)
+                      }}
+                    >
+                      {Array.from(cluster).slice(0, typed).join('')}
+                    </span>
+                  )}
+                </span>
+              )
+            })}
           </div>
         </div>
 
@@ -548,7 +570,6 @@ export default function App() {
         onRestart={resetTest}
       />
 
-      <Tip visible={tipsVisible} />
 
       <div id="snackbar" className={cx('snackbar', snackbar.visible && 'show')}>
         {snackbar.message}

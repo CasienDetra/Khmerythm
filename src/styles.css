@@ -317,6 +317,34 @@ button:focus-visible,
   animation: blink 1s step-end infinite;
 }
 
+#text-to-type .cluster {
+  position: relative;
+  display: inline-block;
+}
+
+.cluster-typed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--text);
+  white-space: pre;
+  pointer-events: none;
+}
+
+#text-to-type .incorrect .cluster-typed {
+  color: var(--error);
+}
+
+#text-to-type .partial::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--split, 0px);
+  border-left: 2px solid var(--accent);
+  animation: blink 1s step-end infinite;
+}
+
 @keyframes blink {
   0%,
   49% {
@@ -546,33 +574,6 @@ kbd {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.tip {
-  position: fixed;
-  left: 24px;
-  bottom: 24px;
-  max-width: 300px;
-  padding: 14px 16px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--muted-strong);
-  font-size: 12px;
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-  z-index: 100;
-}
-
-.tip p {
-  margin: 0;
-  line-height: 2.1;
-}
-
-.tip.hidden {
-  opacity: 0;
-  visibility: hidden;
 }
 
 .snackbar {
