@@ -1,3 +1,4 @@
+import { Image as ImageIcon, RotateCcw } from 'lucide-react'
 import { Sparkline, type ChartPoint } from './charts'
 import { cx } from '../cx'
 
@@ -94,13 +95,13 @@ export default function Results({
   return (
     <div id="results" className={cx('results', !visible && 'hidden')}>
       <div className="results-content">
-        <div className="results-hero">
+        <div className="results-hero" key={visible ? 'shown' : 'hidden'}>
           <div className="hero-stat">
-            <strong className="hero-accent">{avgWpm}</strong>
+            <strong className="hero-accent"><span className="hero-roll hero-roll-up">{avgWpm}</span></strong>
             <span>WPM</span>
           </div>
           <div className="hero-stat">
-            <strong>{finalAccuracy}<small>%</small></strong>
+            <strong><span className="hero-roll hero-roll-down">{finalAccuracy}</span><small>%</small></strong>
             <span>ACCURACY</span>
           </div>
         </div>
@@ -122,8 +123,8 @@ export default function Results({
           </div>
           <Sparkline data={points} format={(v) => `${v} wpm`} />
           <div className="results-actions">
-            <button className="restart-action" onClick={onRestart}>↻ Restart</button>
-            <button onClick={copyImage}>Copy image</button>
+            <button className="restart-action" onClick={onRestart}><RotateCcw size={15} /> Restart</button>
+            <button onClick={copyImage}><ImageIcon size={15} /> Copy image</button>
           </div>
         </div>
       </div>

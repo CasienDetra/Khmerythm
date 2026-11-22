@@ -158,7 +158,7 @@ export default function Sparkline({ data, format = (v: number) => String(v) }: {
         <svg viewBox="0 0 520 160" aria-hidden>
           <defs>
             <linearGradient id="spark-fill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.35" />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.12" />
               <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
             </linearGradient>
             <clipPath id="spark-reveal">

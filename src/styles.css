@@ -9,6 +9,7 @@
   --accent: #ff7a3d;
   --error: #f38ba8;
   --font-main: 'Kantumruy Pro', sans-serif;
+  --font-ui: 'Inter', sans-serif;
   --font-stats: 'Roboto Mono', monospace;
 }
 
@@ -657,6 +658,11 @@ kbd {
   .github-button:hover {
     transform: none;
   }
+
+  .hero-roll-up,
+  .hero-roll-down {
+    animation: none;
+  }
 }
 
 @keyframes chart-draw {
@@ -686,6 +692,7 @@ kbd {
   width: min(100%, 980px);
   margin: auto;
   gap: 28px;
+  font-family: var(--font-ui);
 }
 
 .results-hero {
@@ -703,6 +710,8 @@ kbd {
 }
 
 .hero-stat strong {
+  display: inline-block;
+  overflow: hidden;
   font-family: var(--font-stats);
   font-size: 96px;
   font-weight: 700;
@@ -714,12 +723,48 @@ kbd {
   color: var(--accent);
 }
 
+.hero-roll {
+  display: inline-block;
+}
+
+.hero-roll-up {
+  animation: roll-up 1s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.hero-roll-down {
+  animation: roll-down 1s cubic-bezier(0.22, 0.61, 0.36, 1) 0.08s both;
+}
+
+@keyframes roll-up {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes roll-down {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .hero-stat small {
   font-size: 0.4em;
   color: var(--muted);
 }
 
-.hero-stat span {
+.hero-stat > span {
   font-family: var(--font-stats);
   font-size: 12px;
   letter-spacing: 0.12em;
@@ -759,10 +804,8 @@ kbd {
 }
 
 .results-panel {
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: #141416;
+  padding: 24px 0 0;
+  background: transparent;
 }
 
 .results-panel-head {
@@ -898,6 +941,7 @@ kbd {
 
 .results-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
 }
