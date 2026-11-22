@@ -114,6 +114,7 @@ export default function App() {
   const pauseStartTimeRef = useRef(0)
   const tabPressedRef = useRef(false)
   const snackbarTimeoutRef = useRef<number | undefined>(undefined)
+  const wrongAudioRef = useRef<HTMLAudioElement | null>(null)
   const clusterTextRefs = useRef(new Map<number, HTMLSpanElement>())
   const clusterOverlayRefs = useRef(new Map<number, HTMLSpanElement>())
 
@@ -214,18 +215,30 @@ export default function App() {
     }
   }, [])
 
+  const playWrongSound = useCallback(() => {
+    const audio = wrongAudioRef.current
+    if (!audio) return
+    audio.currentTime = 0
+    void audio.play().catch(() => {})
+  }, [])
+
   const handleInput = useCallback(
     (value: string) => {
       if (!testActiveRef.current && resultsVisibleRef.current) {
         if (inputAreaRef.current) inputAreaRef.current.value = ''
         return
       }
+      const previousTyped = typedTextRef.current
       /* Khmer IMEs emit invisible boundaries for a space; compare as one boundary. */
       const typed = value.replace(/[\u00A0\u200B\u202F]/g, ' ')
       if (typed !== value && inputAreaRef.current) inputAreaRef.current.value = typed
       setTypedText(typed)
       updateTextWords()
       const current = currentTextRef.current
+      const last = typed.length - 1
+      if (appSettings.wrongSound && typed.length > previousTyped.length && typed[last] !== current[last]) {
+        playWrongSound()
+      }
       if (typed.length === current.length && current.length > 0) {
         const allCorrect = current.split('').every((ch, i) => typed[i] === ch)
         if (allCorrect && testActiveRef.current) {
@@ -233,7 +246,7 @@ export default function App() {
         }
       }
     },
-    [updateTextWords, endTest],
+    [updateTextWords, endTest, appSettings.wrongSound, playWrongSound],
   )
 
   const resetTest = useCallback(() => {
@@ -361,6 +374,11 @@ export default function App() {
   useEffect(() => {
     saveSettings(appSettings)
   }, [appSettings])
+
+  useEffect(() => {
+    wrongAudioRef.current = new Audio(`${import.meta.env.BASE_URL}sounds/fahhhhh.mp3`)
+    return () => wrongAudioRef.current?.pause()
+  }, [])
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: light)')
@@ -509,7 +527,7 @@ export default function App() {
         </div>
 
         <div id="text-to-type-container" tabIndex={0} ref={containerRef} onClick={focusInput} onFocus={focusInput}>
-          <div id="text-to-type" ref={textToTypeRef}>
+          <div id="text-to-type" ref={textToTypeRef} className={cx(appSettings.ghostMode && 'ghost-mode')}>
             {clusters.map((cluster, i) => {
               const typed = chars.progress[i]
               const partial = typed > 0 && typed < Array.from(cluster).length
@@ -570,6 +588,7 @@ export default function App() {
       <div className={cx('keyboard-slot', !keyboardVisible && 'is-hidden')}>
         <Keyboard
           requiredCodes={requiredCodes}
+          theme={appSettings.keyboardTheme}
           enableSound={appSettings.sound}
           volume={appSettings.volume}
         />

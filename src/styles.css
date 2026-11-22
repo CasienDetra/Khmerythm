@@ -358,6 +358,17 @@ button:focus-visible,
   animation: blink 1s step-end infinite;
 }
 
+#text-to-type.ghost-mode > span {
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+#text-to-type.ghost-mode > span.correct,
+#text-to-type.ghost-mode > span.incorrect,
+#text-to-type.ghost-mode > span.current {
+  opacity: 1;
+}
+
 #text-to-type .cluster {
   position: relative;
   display: inline-block;
@@ -1104,6 +1115,53 @@ kbd {
   background: var(--panel-hover);
 }
 
+.keyboard-theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.keyboard-theme-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-hover);
+  text-align: left;
+  cursor: pointer;
+}
+
+.keyboard-theme-option.is-active {
+  border-color: var(--accent);
+}
+
+.keyboard-theme-swatches {
+  display: flex;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.keyboard-theme-swatches i {
+  flex: 1;
+}
+
+.keyboard-theme-name {
+  font-size: 12px;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.keyboard-theme-check {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  color: var(--accent);
+}
+
 .settings-volume {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -1114,9 +1172,31 @@ kbd {
 }
 
 .settings-volume input {
+  appearance: none;
   width: 100%;
-  accent-color: var(--accent);
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--accent) var(--fill), var(--border) var(--fill));
   cursor: pointer;
+}
+
+.settings-volume input::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.settings-volume input::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .settings-volume input:disabled {

@@ -1,4 +1,8 @@
+import type { CSSProperties } from 'react'
+import { Check } from 'lucide-react'
 import { cx } from '../cx'
+import { KEYBOARD_THEMES } from './keyboard/themes'
+import type { KeyboardThemeName } from './keyboard/types'
 import type { Settings, ThemeMode } from '../settings'
 
 interface SettingsSidebarProps {
@@ -11,6 +15,7 @@ interface SettingsSidebarProps {
 }
 
 const THEMES: ThemeMode[] = ['dark', 'light', 'system']
+const KEYBOARD_THEME_NAMES = Object.keys(KEYBOARD_THEMES) as KeyboardThemeName[]
 
 export default function SettingsSidebar({
   open,
@@ -43,6 +48,18 @@ export default function SettingsSidebar({
             <span />
           </button>
         </div>
+        <div className="settings-option">
+          <span>Wrong-key sound</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.wrongSound}
+            className={cx('settings-switch', settings.wrongSound && 'is-on')}
+            onClick={() => update('wrongSound', !settings.wrongSound)}
+          >
+            <span />
+          </button>
+        </div>
         <label className="settings-volume">
           <span>Volume</span>
           <input
@@ -51,6 +68,7 @@ export default function SettingsSidebar({
             max={1}
             step={0.05}
             value={settings.volume}
+            style={{ '--fill': `${settings.volume * 100}%` } as CSSProperties}
             disabled={!settings.sound}
             onChange={(e) => update('volume', Number(e.target.value))}
           />
@@ -72,6 +90,50 @@ export default function SettingsSidebar({
               {theme}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <span className="settings-label">Focus</span>
+        <div className="settings-option">
+          <span>Ghost mode</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.ghostMode}
+            className={cx('settings-switch', settings.ghostMode && 'is-on')}
+            onClick={() => update('ghostMode', !settings.ghostMode)}
+          >
+            <span />
+          </button>
+        </div>
+        <p className="settings-hint">Dims upcoming text so only the current character stays clear.</p>
+      </div>
+
+      <div className="settings-section">
+        <span className="settings-label">Keyboard theme</span>
+        <div className="keyboard-theme-grid">
+          {KEYBOARD_THEME_NAMES.map((name) => {
+            const active = settings.keyboardTheme === name
+            const variants = KEYBOARD_THEMES[name].variants
+            return (
+              <button
+                key={name}
+                type="button"
+                className={cx('keyboard-theme-option', active && 'is-active')}
+                aria-pressed={active}
+                onClick={() => update('keyboardTheme', name)}
+              >
+                <span className="keyboard-theme-swatches" aria-hidden>
+                  <i style={{ background: variants.light.bg }} />
+                  <i style={{ background: variants.dark.bg }} />
+                  <i style={{ background: variants.accent.bg }} />
+                </span>
+                <span className="keyboard-theme-name">{name}</span>
+                {active && <Check className="keyboard-theme-check" size={14} aria-hidden="true" />}
+              </button>
+            )
+          })}
         </div>
       </div>
 

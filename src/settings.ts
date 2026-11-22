@@ -1,15 +1,23 @@
+import type { KeyboardThemeName } from './components/keyboard/types'
+
 export type ThemeMode = 'dark' | 'light' | 'system'
 
 export interface Settings {
   sound: boolean
   volume: number
+  wrongSound: boolean
   theme: ThemeMode
+  keyboardTheme: KeyboardThemeName
+  ghostMode: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   sound: true,
   volume: 0.5,
+  wrongSound: false,
   theme: 'dark',
+  keyboardTheme: 'classic',
+  ghostMode: false,
 }
 
 const STORAGE_KEY = 'khmerythm-settings'
