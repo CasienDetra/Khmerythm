@@ -31,7 +31,7 @@ const NON_STARTING_KEYS = [
   'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
   'ScrollLock', 'Pause', 'Insert', 'NumLock', 'CapsLock', 'Escape',
   'AudioVolumeUp', 'AudioVolumeDown', 'AudioVolumeMute',
-  'Control', 'Alt', 'Meta',
+  'Control', 'Alt', 'Meta', 'Shift',
 ]
 
 const SNACKBAR_DURATION = 5000
@@ -45,7 +45,7 @@ function generateWordSet(): string[] {
   return words.slice(0, MAX_WORDS)
 }
 
-function computeChars(typed: string, clusters: string[], shiftDown: boolean) {
+function computeChars(typed: string, clusters: string[]) {
   const typedChars = Array.from(typed)
   const classes: string[] = []
   const progress: number[] = []
@@ -57,8 +57,7 @@ function computeChars(typed: string, clusters: string[], shiftDown: boolean) {
     let mismatch = false
     for (const expected of expectedChars) {
       const typedCh = typedChars[pos]
-      const expectedNeedsShift = getRequiredKeysForChar(expected).includes('shift')
-      const matched = typedCh === expected && (expectedNeedsShift ? shiftDown : !shiftDown)
+      const matched = typedCh === expected
       if (pos < typedChars.length && !matched) {
         errors++
         mismatch = true
@@ -104,7 +103,6 @@ export default function App() {
   const [accuracy, setAccuracy, accuracyRef] = useSyncState(0)
   const [snackbar, setSnackbar] = useState({ message: '', visible: false })
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [physicalShiftKeyDown, setPhysicalShiftKeyDown] = useState(false)
 
   const inputAreaRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -118,8 +116,8 @@ export default function App() {
 
   const clusters = useMemo(() => clusterKhmerText(currentText), [currentText])
   const chars = useMemo(
-    () => computeChars(typedText, clusters, physicalShiftKeyDown),
-    [typedText, clusters, physicalShiftKeyDown],
+    () => computeChars(typedText, clusters),
+    [typedText, clusters],
   )
   const nextChar = chars.nextChar
   const requiredKeys = nextChar ? getRequiredKeysForChar(nextChar) : []
@@ -219,11 +217,14 @@ export default function App() {
         if (inputAreaRef.current) inputAreaRef.current.value = ''
         return
       }
-      setTypedText(value)
+      /* Khmer IMEs emit invisible boundaries for a space; compare as one boundary. */
+      const typed = value.replace(/[\u00A0\u200B\u202F]/g, ' ')
+      if (typed !== value && inputAreaRef.current) inputAreaRef.current.value = typed
+      setTypedText(typed)
       updateTextWords()
       const current = currentTextRef.current
-      if (value.length === current.length && current.length > 0) {
-        const allCorrect = current.split('').every((ch, i) => value[i] === ch)
+      if (typed.length === current.length && current.length > 0) {
+        const allCorrect = current.split('').every((ch, i) => typed[i] === ch)
         if (allCorrect && testActiveRef.current) {
           endTest()
         }
@@ -328,13 +329,13 @@ export default function App() {
   }, [testActive, infiniteMode, calculateWPM, pushWpm])
 
   useEffect(() => {
-    const { errors: errCount } = computeChars(typedText, clusters, physicalShiftKeyDown)
+    const { errors: errCount } = computeChars(typedText, clusters)
     const acc =
       typedText.length === 0
         ? 0
         : Math.max(0, Math.round(((typedText.length - errCount) / typedText.length) * 100))
     setAccuracy(acc)
-  }, [typedText, clusters, physicalShiftKeyDown])
+  }, [typedText, clusters])
 
   useLayoutEffect(() => {
     clusters.forEach((_, i) => {
@@ -380,11 +381,6 @@ export default function App() {
         }
       }
 
-      if (e.key === 'Shift' && !e.repeat) {
-        setPhysicalShiftKeyDown(true)
-        return
-      }
-
       if (e.key === 'Tab') {
         tabPressedRef.current = true
         return
@@ -409,17 +405,9 @@ export default function App() {
       }
     }
 
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'Shift') {
-        setPhysicalShiftKeyDown(false)
-      }
-    }
-
     document.addEventListener('keydown', onKeyDown)
-    document.addEventListener('keyup', onKeyUp)
     return () => {
       document.removeEventListener('keydown', onKeyDown)
-      document.removeEventListener('keyup', onKeyUp)
     }
   }, [toggleKeyboard, togglePause, resetTest, startTest])
 

@@ -123,7 +123,7 @@ export const khmerToQwertyMap: Record<string, string> = {
   'ឦ': ',', 'ឱ': 'Shift + ,',
   '។': '.', '៕': 'Shift + .',
   '៊': '/', 'ឯ': 'Shift + /',
-  ' ': 'Space'
+  ' ': 'Shift + Space'
 };
 
 export function getEnglishEquivalent(khmerChar: string): string {
