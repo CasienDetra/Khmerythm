@@ -75,6 +75,9 @@ button:focus-visible,
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
   padding: 28px 48px;
   min-height: 88px;
 }
@@ -101,8 +104,8 @@ button:focus-visible,
 }
 
 .brand:hover .brand-by {
-  color: var(--accent);
-  text-shadow: 0 0 10px var(--accent), 0 0 20px rgba(255, 122, 61, 0.5);
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 0 20px rgba(255, 255, 255, 0.5);
 }
 
 .topbar-right {
@@ -125,6 +128,9 @@ button:focus-visible,
 }
 
 .ghost-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: var(--panel);
   color: var(--muted-strong);
   border: 1px solid var(--border);
@@ -133,6 +139,12 @@ button:focus-visible,
   font-size: 13px;
   cursor: pointer;
   transition: color 0.15s ease, background 0.15s ease;
+}
+
+.ghost-button svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
 }
 
 .ghost-button:hover {
@@ -171,7 +183,7 @@ button:focus-visible,
   width: 100%;
   max-width: 1120px;
   margin: 0 auto;
-  padding: 40px 32px 120px;
+  padding: 40px 48px 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -181,7 +193,7 @@ button:focus-visible,
 .display-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
   width: 100%;
@@ -194,15 +206,20 @@ button:focus-visible,
   align-items: center;
   gap: 12px;
   min-height: 44px;
+  padding: 4px 12px 4px 4px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
 }
 
 .next-keystroke {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
+  min-width: 52px;
   height: 44px;
-  font-size: 24px;
+  font-size: 28px;
+  font-weight: 500;
   color: var(--text);
   opacity: 0;
   transition: opacity 0.15s ease;
@@ -216,8 +233,9 @@ button:focus-visible,
   display: flex;
   align-items: center;
   font-family: var(--font-stats);
-  font-size: 13px;
-  color: var(--muted-strong);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
   opacity: 0;
   transition: opacity 0.15s ease;
 }
@@ -930,4 +948,106 @@ kbd {
   .results-detail div {
     padding: 0 12px;
   }
+}
+
+.settings-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: min(100%, 340px);
+  height: 100vh;
+  padding: 28px 24px;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  box-shadow: -12px 0 32px rgba(0, 0, 0, 0.35);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+}
+
+.settings-sidebar.is-open {
+  transform: translateX(0);
+}
+
+.settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.settings-close {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted-strong);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.settings-switch {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.settings-switch.is-on {
+  background: var(--accent);
+}
+
+.settings-switch span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--muted-strong);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.settings-switch.is-on span {
+  transform: translateX(20px);
+  background: #fff;
+}
+
+.settings-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
 }
