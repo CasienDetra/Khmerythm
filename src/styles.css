@@ -329,6 +329,7 @@ button:focus-visible,
 }
 
 #text-to-type {
+  position: relative;
   font-family: var(--font-main);
   font-size: clamp(26px, 2.6vw, 36px);
   font-weight: 400;
@@ -352,10 +353,15 @@ button:focus-visible,
   background: rgba(243, 139, 168, 0.12);
 }
 
-#text-to-type .current {
+.type-caret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
   border-left: 2px solid var(--accent);
-  margin-left: -2px;
+  pointer-events: none;
   animation: blink 1s step-end infinite;
+  transition: transform 0.16s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 #text-to-type.ghost-mode > span {
@@ -365,7 +371,8 @@ button:focus-visible,
 
 #text-to-type.ghost-mode > span.correct,
 #text-to-type.ghost-mode > span.incorrect,
-#text-to-type.ghost-mode > span.current {
+#text-to-type.ghost-mode > span.current,
+#text-to-type.ghost-mode > span.type-caret {
   opacity: 1;
 }
 
@@ -385,16 +392,6 @@ button:focus-visible,
 
 #text-to-type .incorrect .cluster-typed {
   color: var(--error);
-}
-
-#text-to-type .partial::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--split, 0px);
-  border-left: 2px solid var(--accent);
-  animation: blink 1s step-end infinite;
 }
 
 @keyframes blink {
@@ -697,8 +694,13 @@ kbd {
   }
 
   .hero-roll-up,
-  .hero-roll-down {
+  .hero-roll-down,
+  .type-caret {
     animation: none;
+  }
+
+  .type-caret {
+    transition: none;
   }
 }
 

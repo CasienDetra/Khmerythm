@@ -110,6 +110,7 @@ export default function App() {
   const inputAreaRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const textToTypeRef = useRef<HTMLDivElement>(null)
+  const caretRef = useRef<HTMLSpanElement>(null)
   const startTimeRef = useRef(0)
   const pauseStartTimeRef = useRef(0)
   const tabPressedRef = useRef(false)
@@ -364,12 +365,18 @@ export default function App() {
   useEffect(() => {
     const container = containerRef.current
     const current = textToTypeRef.current?.querySelector('.current')
-    if (container && current) {
-      const containerTop = container.getBoundingClientRect().top
-      const currentTop = current.getBoundingClientRect().top
-      container.scrollTo({ top: currentTop - containerTop + container.scrollTop - 16, behavior: 'smooth' })
+    if (!container || !(current instanceof HTMLElement)) return
+    const containerTop = container.getBoundingClientRect().top
+    const currentTop = current.getBoundingClientRect().top
+    container.scrollTo({ top: currentTop - containerTop + container.scrollTop - 16, behavior: 'smooth' })
+
+    const caret = caretRef.current
+    if (caret) {
+      const split = parseFloat(current.style.getPropertyValue('--split')) || 0
+      caret.style.height = `${current.offsetHeight}px`
+      caret.style.transform = `translate(${current.offsetLeft + split}px, ${current.offsetTop}px)`
     }
-  }, [typedText, currentText])
+  }, [typedText, currentText, chars.progress])
 
   useEffect(() => {
     saveSettings(appSettings)
@@ -528,6 +535,7 @@ export default function App() {
 
         <div id="text-to-type-container" tabIndex={0} ref={containerRef} onClick={focusInput} onFocus={focusInput}>
           <div id="text-to-type" ref={textToTypeRef} className={cx(appSettings.ghostMode && 'ghost-mode')}>
+            <span className="type-caret" ref={caretRef} aria-hidden="true" />
             {clusters.map((cluster, i) => {
               const typed = chars.progress[i]
               const partial = typed > 0 && typed < Array.from(cluster).length
