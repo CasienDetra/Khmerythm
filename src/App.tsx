@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Settings as SettingsIcon } from 'lucide-react'
 import { cx } from './cx'
 import { useSyncState } from './useSyncState'
 import Keyboard from './components/keyboard'
@@ -6,6 +7,7 @@ import { toKeyCodes } from './components/keyboard/layout'
 import Results from './components/Results'
 import TimerPanel, { type TimerToggle } from './components/TimerPanel'
 import SettingsSidebar from './components/SettingsSidebar'
+import { loadSettings, saveSettings, type Settings } from './settings'
 import { getRandomText } from './data/khmerTexts'
 import { getRequiredKeysForChar, splitKhmerText } from './keyboardLayout'
 import { clusterKhmerText } from './khmerClusters'
@@ -103,6 +105,7 @@ export default function App() {
   const [accuracy, setAccuracy, accuracyRef] = useSyncState(0)
   const [snackbar, setSnackbar] = useState({ message: '', visible: false })
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [appSettings, setAppSettings] = useState<Settings>(loadSettings)
 
   const inputAreaRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -356,6 +359,21 @@ export default function App() {
   }, [typedText, currentText])
 
   useEffect(() => {
+    saveSettings(appSettings)
+  }, [appSettings])
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: light)')
+    const apply = () => {
+      const resolved = appSettings.theme === 'system' ? (media.matches ? 'light' : 'dark') : appSettings.theme
+      document.documentElement.dataset.theme = resolved
+    }
+    apply()
+    media.addEventListener('change', apply)
+    return () => media.removeEventListener('change', apply)
+  }, [appSettings.theme])
+
+  useEffect(() => {
     resetTest()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -455,9 +473,7 @@ export default function App() {
             aria-label="Settings"
             aria-expanded={settingsOpen}
           >
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="15" height="15">
-              <path d="M19.14 12.94a7.5 7.5 0 0 0 .05-.94 7.5 7.5 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L3.7 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88L3.82 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.4.32.62.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.6-.24 1.14-.56 1.63-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.04-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z" />
-            </svg>
+            <SettingsIcon size={18} aria-hidden="true" />
             settings
           </button>
           <a
@@ -551,11 +567,13 @@ export default function App() {
         </div>
       </main>
 
-      {keyboardVisible && (
-        <div className="keyboard-slot">
-          <Keyboard requiredCodes={requiredCodes} />
-        </div>
-      )}
+      <div className={cx('keyboard-slot', !keyboardVisible && 'is-hidden')}>
+        <Keyboard
+          requiredCodes={requiredCodes}
+          enableSound={appSettings.sound}
+          volume={appSettings.volume}
+        />
+      </div>
 
       <Results
         visible={resultsVisible}
@@ -573,6 +591,8 @@ export default function App() {
 
       <SettingsSidebar
         open={settingsOpen}
+        settings={appSettings}
+        onChange={setAppSettings}
         keyboardVisible={keyboardVisible}
         onToggleKeyboard={toggleKeyboard}
         onClose={() => setSettingsOpen(false)}
