@@ -425,11 +425,14 @@ export default function App() {
       }
 
       if (e.key === 'Tab') {
-        tabPressedRef.current = true
+        /* Only the typing surface's Tab starts the restart shortcut; other Tabs navigate. */
+        tabPressedRef.current = e.target === inputAreaRef.current
+        if (tabPressedRef.current) e.preventDefault()
         return
       }
       if (e.key === 'Enter' && tabPressedRef.current) {
         tabPressedRef.current = false
+        e.preventDefault()
         resetTest()
         return
       }
